@@ -5,6 +5,8 @@ import { parse } from "npm:zodiarg@0.2.1";
 
 import { getAccessToken } from "./packages/auth.ts";
 import { getUsers } from "./packages/users.ts";
+import { getClients } from "./packages/clients.ts";
+import { getBranding } from "./packages/branding.ts";
 
 const env = await load();
 const AUTH0_DOMAIN = env.AUTH0_DOMAIN;
@@ -13,7 +15,9 @@ const parsed = parse({
   options: {},
   flags: {},
   args: [
-    z.string().nullable(),
+    z.literal('users'),
+    z.literal('clients').optional(),
+    z.literal('branding').optional(),
   ],
   alias: {},
 
@@ -27,14 +31,26 @@ main(parsed).catch((err) => {
 });
 
 async function main(input: ParsedInput) {
-  const accessToken = await getAccessToken(['read:users']);
-  console.log("Access token:", accessToken);
+  const requestScope = input.args.filter((arg) => !!arg).map((arg) => `read:${arg}`);
+  const accessToken = await getAccessToken(requestScope);
+
+  const result = {};
   if (input.args.includes('users')) {
     const users = await getUsers(`https://${AUTH0_DOMAIN}`, accessToken);
-    console.log("Users:", users);
-  };
+    result['users'] = users;
+  }
 
+  if (input.args.includes('clients')) {
+    const clients = await getClients(`https://${AUTH0_DOMAIN}`, accessToken);
+    result['clients'] = clients;
+  }
+
+  if (input.args.includes('branding')) {
+    const branding = await getBranding(`https://${AUTH0_DOMAIN}`, accessToken);
+    result['branding'] = branding;
+  }
   console.log("Parsed input:", input);
+  console.log("Result:", result);
 }
 
 

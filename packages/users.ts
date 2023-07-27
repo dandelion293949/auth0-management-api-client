@@ -11,7 +11,7 @@ const getUsers = async (domain: string, token: string): Promise<any> => {
 
   const json = await fetch(url, {
     ...options,
-  }).then(async (response) => {
+  }).then((response) => {
     return response.json();
   }).catch((error) => {
     console.log(error);
